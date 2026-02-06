@@ -17,15 +17,9 @@ interface AccountingContextType {
 
 const AccountingContext = createContext<AccountingContextType | undefined>(undefined);
 
-// Mock data for offline mode
-const MOCK_TRANSACTIONS: Transaction[] = [
-  { id: '1', date: '2023-11-20', description: 'Thiết kế website', amount: 15000000, type: 'INCOME', category: 'Bán hàng' },
-  { id: '2', date: '2023-11-18', description: 'Thuê văn phòng tháng 11', amount: 5000000, type: 'EXPENSE', category: 'Văn phòng' },
-  { id: '3', date: '2023-11-15', description: 'Mua văn phòng phẩm', amount: 500000, type: 'EXPENSE', category: 'Văn phòng phẩm' },
-];
-
 export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  // Load initial data from LocalStorage if available (Mock/Offline)
+  // Load initial data from LocalStorage if available (Offline)
+  // Default to empty array, NO MOCK DATA
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     if (!isFirebaseConfigured) {
        const saved = localStorage.getItem('OFFLINE_TRANSACTIONS');
@@ -75,16 +69,18 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   }, [invoices]);
 
-
+  // Load data from Firebase or finalize offline loading
   useEffect(() => {
     if (!isFirebaseConfigured || !db) {
       // OFFLINE MODE: Data already loaded from useState initializer
       setIsLoading(false);
+      calculateSummary(transactions); // Ensure summary is calculated on initial load
       return;
     }
 
     // FIREBASE MODE
     try {
+      setIsLoading(true);
       // 1. Transactions
       const q = query(collection(db, "transactions"), orderBy("date", "desc"));
       const unsubTrans = onSnapshot(q, (snapshot) => {
@@ -95,10 +91,8 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
 
         setTransactions(fetchedTransactions);
         calculateSummary(fetchedTransactions);
-        setIsLoading(false);
       }, (error) => {
         console.error("Error fetching transactions:", error);
-        setIsLoading(false);
       });
 
       // 2. Invoices
@@ -108,7 +102,11 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
             ...doc.data()
         } as InvoiceData));
         setInvoices(fetchedInvoices);
-      }, (error) => console.error("Error fetching invoices:", error));
+        setIsLoading(false); // Set loading false after both are potentially loaded
+      }, (error) => {
+          console.error("Error fetching invoices:", error);
+          setIsLoading(false);
+      });
 
       return () => {
           unsubTrans();
@@ -118,7 +116,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       console.error("Firebase connection error:", error);
       setIsLoading(false);
     }
-  }, []);
+  }, []); // Run once on mount
 
   const addTransaction = async (transaction: Transaction) => {
     if (!isFirebaseConfigured || !db) {
@@ -170,6 +168,31 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
      }
   };
 
+  const resetData = () => {
+    if (confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ dữ liệu?\n\nHành động này sẽ xóa sạch Sổ Thu Chi, Hóa Đơn và đưa ứng dụng về trạng thái trắng ban đầu.\nDữ liệu không thể khôi phục!")) {
+       try {
+           console.log("Reseting data...");
+           localStorage.removeItem('OFFLINE_TRANSACTIONS');
+           localStorage.removeItem('OFFLINE_INVOICES');
+           
+           // Clear state
+           setTransactions([]);
+           setInvoices([]);
+           setSummary({ totalIncome: 0, totalExpense: 0, netProfit: 0 });
+           
+           alert("✅ Đã xóa sạch dữ liệu! Ứng dụng sẽ tải lại.");
+           
+           // Force reload to clear any memory cache
+           setTimeout(() => {
+               window.location.reload();
+           }, 500);
+       } catch (e) {
+           console.error("Reset Error:", e);
+           alert("Có lỗi xảy ra khi xóa dữ liệu.");
+       }
+    }
+  };
+
   return (
     <AccountingContext.Provider value={{ 
       transactions, 
@@ -178,16 +201,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       addTransaction, 
       deleteTransaction,
       addInvoice,
-      resetData: () => {
-        if (confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ dữ liệu?\n\nHành động này sẽ xóa sạch Sổ Thu Chi, Hóa Đơn và đưa ứng dụng về trạng thái trắng ban đầu.\nDữ liệu không thể khôi phục!")) {
-           localStorage.removeItem('OFFLINE_TRANSACTIONS');
-           localStorage.removeItem('OFFLINE_INVOICES');
-           setTransactions([]);
-           setInvoices([]);
-           setSummary({ totalIncome: 0, totalExpense: 0, netProfit: 0 });
-           alert("✅ Đã xóa sạch dữ liệu! Ứng dụng đã sẵn sàng nhập liệu mới.");
-        }
-      },
+      resetData,
       isLoading,
       isOfflineMode: !isFirebaseConfigured 
     }}>
@@ -203,5 +217,3 @@ export const useAccounting = () => {
   }
   return context;
 };
-
-
