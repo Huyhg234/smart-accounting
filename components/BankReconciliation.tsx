@@ -224,7 +224,7 @@ const BankReconciliation: React.FC = () => {
           </thead>
           <tbody className="divide-y divide-slate-100">
             {transactions.map((t) => (
-              <tr key={t.id} className={`hover:bg-slate-50 transition-colors ${t.status === 'MATCHED' ? 'bg-slate-50 opacity-60' : ''}`}>
+              <tr key={t.id} className={`hover:bg-slate-50 transition-colors ${t.status === 'MATCHED' ? 'bg-green-50' : ''}`}>
                 <td className="px-4 py-4 whitespace-nowrap">{t.date}</td>
                 <td className="px-4 py-4">
                   <div className="font-medium text-slate-800">{t.description}</div>
@@ -258,12 +258,21 @@ const BankReconciliation: React.FC = () => {
                 </td>
 
                 <td className="px-4 py-4 text-center">
-                    <button 
-                      onClick={() => handleApprove(t)}
-                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                       <Check className="w-3 h-3 mr-1" /> Duyệt
-                    </button>
+                   {t.status === 'MATCHED' ? (
+                      <button 
+                        disabled
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-green-400 cursor-not-allowed"
+                      >
+                         <Check className="w-3 h-3 mr-1" /> Đã duyệt
+                      </button>
+                   ) : (
+                      <button 
+                        onClick={() => handleApprove(t)}
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                      >
+                         <Check className="w-3 h-3 mr-1" /> Duyệt
+                      </button>
+                   )}
                 </td>
               </tr>
             ))}
