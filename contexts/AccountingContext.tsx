@@ -28,7 +28,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     if (!isFirebaseConfigured) {
        const saved = localStorage.getItem('OFFLINE_TRANSACTIONS');
-       return saved ? JSON.parse(saved) : MOCK_TRANSACTIONS;
+       return saved ? JSON.parse(saved) : [];
     }
     return [];
   });

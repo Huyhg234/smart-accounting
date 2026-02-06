@@ -10,10 +10,8 @@ const InvoiceReconciliation: React.FC = () => {
     const [isMatching, setIsMatching] = useState(false);
     
     // State quản lý danh sách Hợp đồng (Thay thế Mock cứng)
-    const [contracts, setContracts] = useState<Contract[]>([
-        { id: 'c1', customerName: 'Khách hàng Trần Văn B', contractValue: 5000000, invoicedAmount: 0, status: 'OPEN' },
-        { id: 'c2', customerName: 'Công Ty Du Lịch Việt', contractValue: 50000000, invoicedAmount: 30000000, status: 'OPEN' }
-    ]);
+    // State quản lý danh sách Hợp đồng (Thay thế Mock cứng)
+    const [contracts, setContracts] = useState<Contract[]>([]);
     const [newContract, setNewContract] = useState({ name: '', value: 0 });
 
     const addContract = () => {
