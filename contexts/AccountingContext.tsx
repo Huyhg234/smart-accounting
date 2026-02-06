@@ -10,6 +10,7 @@ interface AccountingContextType {
   addTransaction: (transaction: Transaction) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
   addInvoice: (invoice: InvoiceData) => Promise<void>;
+  resetData: () => void;
   isLoading: boolean;
   isOfflineMode: boolean;
 }
@@ -177,6 +178,16 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       addTransaction, 
       deleteTransaction,
       addInvoice,
+      resetData: () => {
+        if (confirm("⚠️ CẢNH BÁO: Bạn có chắc chắn muốn XÓA TOÀN BỘ dữ liệu?\n\nHành động này sẽ xóa sạch Sổ Thu Chi, Hóa Đơn và đưa ứng dụng về trạng thái trắng ban đầu.\nDữ liệu không thể khôi phục!")) {
+           localStorage.removeItem('OFFLINE_TRANSACTIONS');
+           localStorage.removeItem('OFFLINE_INVOICES');
+           setTransactions([]);
+           setInvoices([]);
+           setSummary({ totalIncome: 0, totalExpense: 0, netProfit: 0 });
+           alert("✅ Đã xóa sạch dữ liệu! Ứng dụng đã sẵn sàng nhập liệu mới.");
+        }
+      },
       isLoading,
       isOfflineMode: !isFirebaseConfigured 
     }}>
