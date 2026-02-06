@@ -100,19 +100,47 @@ const TransactionManager: React.FC = () => {
         <div className="flex gap-2">
            <button 
              onClick={() => {
-                // Header
-                const headers = ["Ngày", "Mô tả", "Danh mục", "Loại", "Số tiền"];
-                // Rows
-                const rows = filteredTransactions.map(t => [
-                    `"${t.date}"`,
-                    `"${t.description.replace(/"/g, '""')}"`,
-                    `"${t.category}"`,
-                    `"${t.type === 'INCOME' ? 'Thu' : 'Chi'}"`,
-                    `"${t.amount}"`
-                ]);
-                // BOM + Tab Sep
-                const csvContent = "\uFEFF" + [headers.join("\t"), ...rows.map(r => r.join("\t"))].join("\n");
-                const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+                // HTML Table Format for better Excel compatibility
+                const tableContent = `
+                  <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                  <head>
+                    <meta charset="utf-8" />
+                    <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Sổ Thu Chi</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+                    <style>
+                      td, th { border: 0.5pt solid #000000; padding: 5px; vertical-align: middle; }
+                      th { background-color: #f0f0f0; font-weight: bold; text-align: center; }
+                      .num { mso-number-format:"#,##0"; text-align: right; }
+                      .text { mso-number-format:"\@"; }
+                    </style>
+                  </head>
+                  <body>
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Ngày</th>
+                          <th>Mô tả</th>
+                          <th>Danh mục</th>
+                          <th>Loại</th>
+                          <th>Số tiền</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        ${filteredTransactions.map(t => `
+                          <tr>
+                            <td class="text">${t.date}</td>
+                            <td class="text">${t.description}</td>
+                            <td class="text">${t.category}</td>
+                            <td class="text">${t.type === 'INCOME' ? 'Thu' : 'Chi'}</td>
+                            <td class="num">${t.amount}</td>
+                          </tr>
+                        `).join('')}
+                      </tbody>
+                    </table>
+                  </body>
+                  </html>
+                `;
+                
+                const blob = new Blob([tableContent], { type: 'application/vnd.ms-excel' });
                 const url = URL.createObjectURL(blob);
                 const link = document.createElement("a");
                 link.href = url;
