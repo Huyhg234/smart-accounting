@@ -5,10 +5,21 @@ import { InvoiceData, Transaction } from '../types';
 import { Upload, FileSpreadsheet, CheckCircle, AlertCircle, Loader2, Save, X, FileText } from 'lucide-react';
 
 const InvoiceProcessor: React.FC = () => {
-  const { addTransaction } = useAccounting();
-  const [invoices, setInvoices] = useState<InvoiceData[]>([]);
+  // 1. Get global invoices from Context
+  const { addTransaction, invoices: globalInvoices } = useAccounting();
+  
+  // 2. Initialize local state with global invoices
+  const [invoices, setInvoices] = useState<InvoiceData[]>(globalInvoices);
   const [isProcessing, setIsProcessing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // 3. Sync: When global context changes (e.g. added from Reconciliation), update local state
+  // But only if we are NOT currently processing new files to avoid overwriting work in progress
+  React.useEffect(() => {
+     if (!isProcessing) {
+        setInvoices(globalInvoices);
+     }
+  }, [globalInvoices, isProcessing]);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -34,7 +45,8 @@ const InvoiceProcessor: React.FC = () => {
         }
       }));
       
-      setInvoices(prev => [...prev, ...newFiles.map(f => f.data)]);
+      // Merge new files being uploaded with existing list
+      setInvoices(prev => [...newFiles.map(f => f.data), ...prev]);
       processFiles(e.target.files);
     }
   };
