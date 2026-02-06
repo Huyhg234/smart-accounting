@@ -28,7 +28,7 @@ const Sidebar: React.FC = () => {
         </NavLink>
         <NavLink to="/invoices" className={navClass}>
           <FileSpreadsheet className="w-5 h-5" />
-          <span>Xử lý Hóa đơn</span>
+          <span>Quản lý Hóa đơn</span>
         </NavLink>
         
         <div className="pt-4 pb-2 px-4 text-xs font-semibold text-slate-400 uppercase tracking-wider">
