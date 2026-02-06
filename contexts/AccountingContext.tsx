@@ -22,7 +22,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
   // Default to empty array, NO MOCK DATA
   const [transactions, setTransactions] = useState<Transaction[]>(() => {
     if (!isFirebaseConfigured) {
-       const saved = localStorage.getItem('OFFLINE_TRANSACTIONS');
+       const saved = localStorage.getItem('SAAS_TRANSACTIONS_V1');
        return saved ? JSON.parse(saved) : [];
     }
     return [];
@@ -30,7 +30,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
   
   const [invoices, setInvoices] = useState<InvoiceData[]>(() => {
     if (!isFirebaseConfigured) {
-       const saved = localStorage.getItem('OFFLINE_INVOICES');
+       const saved = localStorage.getItem('SAAS_INVOICES_V1');
        return saved ? JSON.parse(saved) : [];
     }
     return [];
@@ -58,14 +58,14 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
   // Persist to LocalStorage whenever data changes in Offline Mode
   useEffect(() => {
     if (!isFirebaseConfigured) {
-        localStorage.setItem('OFFLINE_TRANSACTIONS', JSON.stringify(transactions));
+        localStorage.setItem('SAAS_TRANSACTIONS_V1', JSON.stringify(transactions));
         calculateSummary(transactions);
     }
   }, [transactions]);
 
   useEffect(() => {
      if (!isFirebaseConfigured) {
-        localStorage.setItem('OFFLINE_INVOICES', JSON.stringify(invoices));
+        localStorage.setItem('SAAS_INVOICES_V1', JSON.stringify(invoices));
     }
   }, [invoices]);
 

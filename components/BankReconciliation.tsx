@@ -5,10 +5,7 @@ import { analyzeBankTransaction } from '../services/geminiService';
 import { ArrowDownLeft, ArrowUpRight, Check, X, FileText, RefreshCw, Wand2, Settings, Smartphone, ExternalLink, PlayCircle } from 'lucide-react';
 
 // Mock Data representing a Bank Statement
-const MOCK_BANK_DATA: BankTransaction[] = [
-  { id: 'b1', date: '2026-02-01', description: 'KHACH HANG NGUYEN VAN A TT TIEN TOUR DA NANG', amount: 15000000, type: 'CREDIT', status: 'NEW' },
-  { id: 'b2', date: '2026-02-02', description: 'THANH TOAN TIEN DIEN THANG 01/2026', amount: 2500000, type: 'DEBIT', status: 'NEW' },
-];
+const MOCK_BANK_DATA: BankTransaction[] = [];
 
 const BankReconciliation: React.FC = () => {
   const { addTransaction } = useAccounting();

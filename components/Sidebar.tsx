@@ -63,12 +63,7 @@ const Sidebar: React.FC = () => {
       </nav>
 
       <div className="p-4 border-t border-slate-100 space-y-3">
-        <button 
-           onClick={resetData}
-           className="w-full py-2 px-4 bg-red-50 text-red-600 hover:bg-red-100 rounded-lg text-sm font-semibold transition-colors flex items-center justify-center gap-2"
-        >
-           🗑️ Xóa Dữ Liệu
-        </button>
+
 
         <div className="bg-slate-50 p-3 rounded-lg text-sm text-slate-500">
           <p>© 2024 KếToánPro</p>
