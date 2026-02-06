@@ -81,8 +81,8 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     // FIREBASE MODE
     try {
       setIsLoading(true);
-      // 1. Transactions
-      const q = query(collection(db, "transactions"), orderBy("date", "desc"));
+      // 1. Transactions - POINT TO NEW PRODUCTION COLLECTION
+      const q = query(collection(db, "transactions_prod"), orderBy("date", "desc"));
       const unsubTrans = onSnapshot(q, (snapshot) => {
         const fetchedTransactions: Transaction[] = snapshot.docs.map(doc => ({
           id: doc.id,
@@ -95,8 +95,8 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
         console.error("Error fetching transactions:", error);
       });
 
-      // 2. Invoices
-      const qInv = query(collection(db, "invoices"), orderBy("date", "desc"));
+      // 2. Invoices - POINT TO NEW PRODUCTION COLLECTION
+      const qInv = query(collection(db, "invoices_prod"), orderBy("date", "desc"));
       const unsubInv = onSnapshot(qInv, (snapshot) => {
         const fetchedInvoices: InvoiceData[] = snapshot.docs.map(doc => ({
             ...doc.data()
@@ -129,7 +129,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
 
     try {
       const { id, ...data } = transaction; 
-      await addDoc(collection(db, "transactions"), {
+      await addDoc(collection(db, "transactions_prod"), {
         ...data,
         createdAt: Timestamp.now()
       });
@@ -146,7 +146,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       return;
     }
     try {
-      await deleteDoc(doc(db, "transactions", id));
+      await deleteDoc(doc(db, "transactions_prod", id));
     } catch (error) {
       console.error("Error deleting transaction:", error);
     }
@@ -158,7 +158,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
         return;
      }
      try {
-        await addDoc(collection(db, "invoices"), {
+        await addDoc(collection(db, "invoices_prod"), {
             ...invoice,
             createdAt: Timestamp.now()
         });
