@@ -86,31 +86,82 @@ const TourExpenseChecker: React.FC = () => {
     }
   };
 
-  // Helper Export Excel (Trick: Dùng Tab delimiter + đuôi .xls để Excel tự tách cột)
+  // Helper Export Excel (HTML Table trick)
   const exportToCSV = () => {
     if (!auditResult) return;
     
-    // Header
-    const headers = ["Hạng mục", "Thực chi", "Định mức", "Trạng thái", "Chi tiết vấn đề"];
-    
-    // Rows (Dùng \t để ngăn cách cột)
-    const rows = auditResult.items.map(item => [
-        `"${item.item}"`, 
-        `"${item.actualAmount}"`,
-        `"${item.planAmount}"`,
-        `"${item.status === 'OK' ? 'Hợp lệ' : item.status === 'WARNING' ? 'Cảnh báo' : 'Vi phạm'}"`,
-        `"${item.issue}"`
-    ]);
+    // HTML Table Format
+    const tableContent = `
+      <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+      <head>
+        <meta charset="utf-8" />
+        <!--[if gte mso 9]><xml><x:ExcelWorkbook><x:ExcelWorksheets><x:ExcelWorksheet><x:Name>Kết Quả Kiểm Toán</x:Name><x:WorksheetOptions><x:DisplayGridlines/></x:WorksheetOptions></x:ExcelWorksheet></x:ExcelWorksheets></x:ExcelWorkbook></xml><![endif]-->
+        <style>
+          td, th { border: 0.5pt solid #000000; padding: 5px; vertical-align: middle; }
+          th { background-color: #dbeafe; font-weight: bold; text-align: center; color: #1e3a8a; }
+          .num { mso-number-format:"#,##0"; text-align: right; }
+          .text { mso-number-format:"\@"; }
+          .error { background-color: #fee2e2; color: #b91c1c; font-weight: bold; }
+          .warning { background-color: #ffedd5; color: #c2410c; }
+          .ok { color: #15803d; }
+          .title { font-size: 16pt; font-weight: bold; text-align: center; border: none; }
+          .summary { font-weight: bold; border: none; }
+        </style>
+      </head>
+      <body>
+        <table>
+          <tr><td colspan="5" class="title">BÁO CÁO KIỂM TOÁN TOUR TỰ ĐỘNG</td></tr>
+          <tr><td colspan="5" style="border:none">Thời gian xuất: ${new Date().toLocaleString('vi-VN')}</td></tr>
+          <tr><td colspan="5" style="border:none"></td></tr>
+          
+          <!-- Summary Section -->
+          <tr>
+             <td colspan="2" class="summary">Tổng chi thực tế:</td>
+             <td colspan="3" class="num summary" style="color: #1e293b">${auditResult.summary.totalActual}</td>
+          </tr>
+          <tr>
+             <td colspan="2" class="summary">Chi sai phạm/Nghi ngờ:</td>
+             <td colspan="3" class="num summary" style="color: #dc2626">${auditResult.summary.totalIllegal}</td>
+          </tr>
+          <tr>
+             <td colspan="2" class="summary">Tỷ lệ tuân thủ:</td>
+             <td colspan="3" class="summary" style="text-align: right; color: ${auditResult.summary.complianceRate >= 90 ? 'green' : 'orange'}">${auditResult.summary.complianceRate}%</td>
+          </tr>
+          <tr><td colspan="5" style="border:none"></td></tr>
 
-    // Combine content: Dùng \t thay vì ,
-    const csvContent = "\uFEFF" + [headers.join("\t"), ...rows.map(r => r.join("\t"))].join("\n");
-    
-    // Create Blob & Download as .xls to force Excel to open nicely
-    const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+          <thead>
+            <tr>
+              <th>Hạng mục</th>
+              <th>Thực chi (VNĐ)</th>
+              <th>Định mức Plan</th>
+              <th>Trạng thái</th>
+              <th>Chi tiết vấn đề (AI)</th>
+            </tr>
+          </thead>
+          <tbody>
+            ${auditResult.items.map(item => `
+              <tr>
+                <td class="text">${item.item}</td>
+                <td class="num">${item.actualAmount}</td>
+                <td class="text" style="text-align:right">${item.planAmount}</td>
+                <td class="${item.status === 'ERROR' ? 'error' : item.status === 'WARNING' ? 'warning' : 'ok'}">
+                    ${item.status === 'OK' ? 'Hợp lệ' : item.status === 'WARNING' ? 'Cảnh báo' : 'Vi phạm'}
+                </td>
+                <td class="text">${item.issue}</td>
+              </tr>
+            `).join('')}
+          </tbody>
+        </table>
+      </body>
+      </html>
+    `;
+
+    // Create Blob & Download
+    const blob = new Blob([tableContent], { type: 'application/vnd.ms-excel' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
-    link.setAttribute("download", `Bao_Cao_Kiem_Toan_${new Date().toISOString().slice(0,10)}.xls`); // Đuôi .xls
+    link.setAttribute("download", `Bao_Cao_Kiem_Toan_${new Date().toISOString().slice(0,10)}.xls`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
