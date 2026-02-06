@@ -87,6 +87,20 @@ const BankReconciliation: React.FC = () => {
     setTimeout(() => handleAnalyze(newTrans), 500);
   };
 
+  const generateDemoData = () => {
+      const demoData: BankTransaction[] = [
+        { id: `demo_1_${Date.now()}`, date: '2026-02-06', description: 'KHACH HANG NGUYEN VAN A TT TIEN TOUR DA NANG', amount: 15000000, type: 'CREDIT', status: 'NEW' },
+        { id: `demo_2_${Date.now()}`, date: '2026-02-05', description: 'THANH TOAN TIEN DIEN THANG 01/2026', amount: 2500000, type: 'DEBIT', status: 'NEW' },
+        { id: `demo_3_${Date.now()}`, date: '2026-02-05', description: 'KH TRAN VAN B CK TIEN TOUR SAPA', amount: 5000000, type: 'CREDIT', status: 'NEW' }
+      ];
+      setTransactions(prev => [...demoData, ...prev]);
+      
+      // Auto analyze demo data
+      demoData.forEach((t, index) => {
+          setTimeout(() => handleAnalyze(t), index * 800 + 500);
+      });
+  };
+
   return (
     <div className="space-y-6 animate-fade-in pb-10">
       <div className="flex justify-between items-start">
@@ -208,6 +222,12 @@ const BankReconciliation: React.FC = () => {
           className="bg-orange-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-orange-700 shadow-sm"
         >
           + Giả lập Tiền về
+        </button>
+        <button 
+          onClick={generateDemoData}
+          className="bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-purple-700 shadow-sm flex items-center gap-2"
+        >
+          <PlayCircle className="w-4 h-4" /> ⚡ Demo Data
         </button>
       </div>
 
