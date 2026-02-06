@@ -34,15 +34,21 @@ Bạn cần copy các giá trị từ file `.env` trong máy của bạn và dá
 
 Thêm lần lượt các biến sau:
 
-| Key (Tên biến)                      | Value (Giá trị - Lấy từ file .env)         |
-| :---------------------------------- | :----------------------------------------- |
-| `VITE_FIREBASE_API_KEY`             | `AIzaSy...`                                |
+| `VITE_FIREBASE_API_KEY`             | `(Paste Your NEW Regenerated Key Here)`    |
 | `VITE_FIREBASE_AUTH_DOMAIN`         | `smartaccounting-saas.firebaseapp.com`     |
 | `VITE_FIREBASE_PROJECT_ID`          | `smartaccounting-saas`                     |
 | `VITE_FIREBASE_STORAGE_BUCKET`      | `smartaccounting-saas.firebasestorage.app` |
 | `VITE_FIREBASE_MESSAGING_SENDER_ID` | `41111074288`                              |
-| `VITE_FIREBASE_APP_ID`              | `1:41111074288...`                         |
+| `VITE_FIREBASE_APP_ID`              | `1:41111074288:web:b9feb5cf6f7af1432b9935` |
 | `VITE_FIREBASE_MEASUREMENT_ID`      | `G-LL9YG9HYPQ`                             |
+
+### ⚠️ Quan Trọng: Cảnh Báo Bảo Mật & Dữ Liệu Sạch (Update V2)
+
+1. **Rotate API Key:** Do sự cố leak key trước đây, hãy vào [Google Cloud Console](https://console.cloud.google.com/apis/credentials) -> Chọn Project `smartaccounting-saas` -> **Regenerate Key**. Dùng key **MỚI** đó để điền vào Vercel.
+2. **Production Database:** Ứng dụng hiện tại đã được cấu hình để trỏ vào collection `transactions_prod` và `invoices_prod`.
+   - Điều này giúp tách biệt hoàn toàn với dữ liệu test cũ.
+   - Khách hàng mới sẽ luôn thấy một database **trắng tinh** khi bắt đầu sử dụng.
+   - Không cần thao tác "Reset Data" thủ công nữa.
 
 > **Lưu ý:** Đừng quên thêm cả biến `GEMINI_API_KEY` nếu bạn muốn config cứng trên server (hoặc để người dùng tự nhập trong app như hiện tại).
 
