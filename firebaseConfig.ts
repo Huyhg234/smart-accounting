@@ -14,10 +14,11 @@ const firebaseConfig = {
 };
 
 // Check if the configuration is still using placeholders
-export const isFirebaseConfigured = firebaseConfig.projectId !== "YOUR_PROJECT_ID";
+// Check if the configuration valid (must have API Key and Project ID)
+export const isFirebaseConfigured = !!firebaseConfig.apiKey && !!firebaseConfig.projectId && firebaseConfig.projectId !== "YOUR_PROJECT_ID";
 
 let app;
-let db: Firestore;
+let db: Firestore | undefined;
 
 if (isFirebaseConfigured) {
   try {
@@ -25,9 +26,11 @@ if (isFirebaseConfigured) {
     db = getFirestore(app);
   } catch (error) {
     console.error("Firebase initialization error:", error);
+    // Fallback to offline if init fails
+    db = undefined; 
   }
 } else {
-  console.warn("Firebase chưa được cấu hình. Ứng dụng sẽ chạy ở chế độ Offline (Mock Data).");
+  console.warn("Firebase chưa được cấu hình hoặc thiếu biến môi trường. Ứng dụng sẽ chạy ở chế độ Offline (LocalStorage).");
 }
 
 export { db };

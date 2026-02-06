@@ -24,8 +24,23 @@ const MOCK_TRANSACTIONS: Transaction[] = [
 ];
 
 export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [transactions, setTransactions] = useState<Transaction[]>([]);
-  const [invoices, setInvoices] = useState<InvoiceData[]>([]);
+  // Load initial data from LocalStorage if available (Mock/Offline)
+  const [transactions, setTransactions] = useState<Transaction[]>(() => {
+    if (!isFirebaseConfigured) {
+       const saved = localStorage.getItem('OFFLINE_TRANSACTIONS');
+       return saved ? JSON.parse(saved) : MOCK_TRANSACTIONS;
+    }
+    return [];
+  });
+  
+  const [invoices, setInvoices] = useState<InvoiceData[]>(() => {
+    if (!isFirebaseConfigured) {
+       const saved = localStorage.getItem('OFFLINE_INVOICES');
+       return saved ? JSON.parse(saved) : [];
+    }
+    return [];
+  });
+
   const [summary, setSummary] = useState<FinancialSummary>({ totalIncome: 0, totalExpense: 0, netProfit: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -45,12 +60,24 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     });
   };
 
+  // Persist to LocalStorage whenever data changes in Offline Mode
+  useEffect(() => {
+    if (!isFirebaseConfigured) {
+        localStorage.setItem('OFFLINE_TRANSACTIONS', JSON.stringify(transactions));
+        calculateSummary(transactions);
+    }
+  }, [transactions]);
+
+  useEffect(() => {
+     if (!isFirebaseConfigured) {
+        localStorage.setItem('OFFLINE_INVOICES', JSON.stringify(invoices));
+    }
+  }, [invoices]);
+
+
   useEffect(() => {
     if (!isFirebaseConfigured || !db) {
-      // OFFLINE MODE
-      setTransactions(MOCK_TRANSACTIONS);
-      setInvoices([]);
-      calculateSummary(MOCK_TRANSACTIONS);
+      // OFFLINE MODE: Data already loaded from useState initializer
       setIsLoading(false);
       return;
     }
@@ -94,10 +121,10 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const addTransaction = async (transaction: Transaction) => {
     if (!isFirebaseConfigured || !db) {
+      // OFFLINE: Update state -> useEffect will save to LS
       const newTx = { ...transaction, id: Date.now().toString() };
       const updated = [newTx, ...transactions];
       setTransactions(updated);
-      calculateSummary(updated);
       return;
     }
 
@@ -109,7 +136,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
       });
     } catch (error) {
       console.error("Error adding transaction:", error);
-      alert("Lỗi khi lưu dữ liệu lên Cloud. Đang chạy ở chế độ Offline?");
+      alert("Lỗi khi lưu dữ liệu lên Cloud.");
     }
   };
 
@@ -117,7 +144,6 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     if (!isFirebaseConfigured || !db) {
       const updated = transactions.filter(t => t.id !== id);
       setTransactions(updated);
-      calculateSummary(updated);
       return;
     }
     try {
