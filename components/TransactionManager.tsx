@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useAccounting } from '../contexts/AccountingContext';
 import { Transaction, TransactionType } from '../types';
 import { predictCategory } from '../services/geminiService';
-import { Plus, Trash2, Wand2, Search, ArrowUpCircle, ArrowDownCircle, Filter, X, Calendar, Loader2 } from 'lucide-react';
+import { Plus, Trash2, Wand2, Search, ArrowUpCircle, ArrowDownCircle, Filter, X, Calendar, Loader2, FileSpreadsheet } from 'lucide-react';
 
 const TransactionManager: React.FC = () => {
   const { transactions, addTransaction, deleteTransaction, isLoading } = useAccounting();
@@ -97,13 +97,43 @@ const TransactionManager: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold text-slate-800">Sổ Thu Chi</h1>
-        <button 
-          onClick={() => setIsFormOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm"
-        >
-          <Plus className="w-5 h-5" />
-          Thêm Giao Dịch
-        </button>
+        <div className="flex gap-2">
+           <button 
+             onClick={() => {
+                // Header
+                const headers = ["Ngày", "Mô tả", "Danh mục", "Loại", "Số tiền"];
+                // Rows
+                const rows = filteredTransactions.map(t => [
+                    `"${t.date}"`,
+                    `"${t.description.replace(/"/g, '""')}"`,
+                    `"${t.category}"`,
+                    `"${t.type === 'INCOME' ? 'Thu' : 'Chi'}"`,
+                    `"${t.amount}"`
+                ]);
+                // BOM + Tab Sep
+                const csvContent = "\uFEFF" + [headers.join("\t"), ...rows.map(r => r.join("\t"))].join("\n");
+                const blob = new Blob([csvContent], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement("a");
+                link.href = url;
+                link.setAttribute("download", `So_Thu_Chi_${new Date().toISOString().slice(0,10)}.xls`);
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+             }}
+             className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm"
+           >
+             <FileSpreadsheet className="w-5 h-5" />
+             Xuất Excel
+           </button>
+           <button 
+            onClick={() => setIsFormOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors shadow-sm"
+          >
+            <Plus className="w-5 h-5" />
+            Thêm Giao Dịch
+          </button>
+        </div>
       </div>
 
       {/* Controls Section */}
