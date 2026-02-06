@@ -71,8 +71,8 @@ const InvoiceReconciliation: React.FC = () => {
         subTotal: Math.round(res.difference / 1.08),
         description: `Thu tiền theo HĐ ${res.contractId} - ${res.reason}`,
         category: "Doanh thu dịch vụ",
-        status: 'pending', // pending = Draft
-        items: [], // Important: Empty items array
+        status: 'success', // Changed to success so it can be saved to ledger immediately
+        items: [], 
         paymentMethod: "Chuyển khoản"
     };
 
