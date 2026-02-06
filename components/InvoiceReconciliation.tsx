@@ -62,12 +62,18 @@ const InvoiceReconciliation: React.FC = () => {
         invoiceNumber: `DRAFT-${Date.now().toString().slice(-4)}`,
         date: new Date().toISOString().split('T')[0],
         vendorName: "Công Ty Của Bạn",
+        vendorTaxCode: "",
+        vendorAddress: "",
         buyerName: contracts.find(c => c.id === res.contractId)?.customerName || "Khách lẻ",
         taxAmount: Math.round(res.difference * 0.08), // Giả sử thuế 8%
+        taxRate: "8%",
         totalAmount: res.difference,
+        subTotal: Math.round(res.difference / 1.08),
         description: `Thu tiền theo HĐ ${res.contractId} - ${res.reason}`,
         category: "Doanh thu dịch vụ",
-        status: 'pending' // pending = Draft
+        status: 'pending', // pending = Draft
+        items: [], // Important: Empty items array
+        paymentMethod: "Chuyển khoản"
     };
 
     await addInvoice(newInvoice as any);
