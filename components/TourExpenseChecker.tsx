@@ -20,10 +20,29 @@ const TourExpenseChecker: React.FC = () => {
   // Helper đọc file
   const readFileContent = (file: File): Promise<{ type: 'text' | 'image', content: string, mimeType: string }> => {
     return new Promise((resolve, reject) => {
-      // 1. Nếu là file Excel (.xlsx, .xls) -> Cảnh báo
+      // 1. New Feature: Support Excel Files directly using xlsx library
       if (file.name.endsWith('.xlsx') || file.name.endsWith('.xls')) {
-          alert(`⚠️ Hệ thống AI hiện chưa hỗ trợ đọc trực tiếp file Excel Binary (${file.name}).\n\n👉 Vui lòng sử dụng file CSV hoặc CHỤP ẢNH màn hình Excel để có kết quả chính xác nhất!`);
-          reject("Unsupported file type");
+           import('xlsx').then(XLSX => {
+              const reader = new FileReader();
+              reader.readAsArrayBuffer(file);
+              reader.onload = (e) => {
+                  try {
+                      const data = new Uint8Array(e.target?.result as ArrayBuffer);
+                      const workbook = XLSX.read(data, { type: 'array' });
+                      const firstSheetName = workbook.SheetNames[0];
+                      const worksheet = workbook.Sheets[firstSheetName];
+                      // Convert to CSV for AI to read easily
+                      const csv = XLSX.utils.sheet_to_csv(worksheet);
+                      resolve({ type: 'text', content: csv, mimeType: 'text/csv' });
+                  } catch (err) {
+                      reject("Lỗi đọc file Excel: " + err);
+                  }
+              };
+              reader.onerror = reject;
+           }).catch(err => {
+               alert("Chưa tải được thư viện đọc Excel. Vui lòng check mạng!");
+               reject(err);
+           });
           return;
       }
 
