@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Test Firebase Connection</title>
+  </head>
+  <body>
+    <h1>Kiểm tra kết nối Firebase</h1>
+    <div id="status">Đang kết nối...</div>
+    <ul id="logs"></ul>
+
+    <script type="module">
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+      import {
+        getFirestore,
+        collection,
+        addDoc,
+        getDocs,
+      } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
+
+      // Cấu hình của bạn
+      const firebaseConfig = {
+        apiKey: "AIzaSyBN5FD1B9x6mIPfZoqMCC8igNv1dgr6bKw",
+        authDomain: "smartaccounting-saas.firebaseapp.com",
+        projectId: "smartaccounting-saas",
+        storageBucket: "smartaccounting-saas.firebasestorage.app",
+        messagingSenderId: "41111074288",
+        appId: "1:41111074288:web:b9feb5cf6f7af1432b9935",
+        measurementId: "G-LL9YG9HYPQ",
+      };
+
+      const app = initializeApp(firebaseConfig);
+      const db = getFirestore(app);
+      const statusDiv = document.getElementById("status");
+      const logsUl = document.getElementById("logs");
+
+      function log(msg, color = "black") {
+        const li = document.createElement("li");
+        li.style.color = color;
+        li.textContent = msg;
+        logsUl.appendChild(li);
+      }
+
+      async function runTest() {
+        try {
+          log("Đang thử ghi dữ liệu mẫu...");
+          const docRef = await addDoc(collection(db, "TEST_CONNECTION"), {
+            message: "Xin chào Admin Huy! Kết nối thành công.",
+            timestamp: new Date().toISOString(),
+          });
+
+          log(`✅ Ghi thành công! ID: ${docRef.id}`, "green");
+          statusDiv.textContent = "KẾT NỐI THÀNH CÔNG!";
+          statusDiv.style.color = "green";
+        } catch (e) {
+          console.error(e);
+          log(`❌ Lỗi: ${e.message}`, "red");
+          statusDiv.textContent = "KẾT NỐI THẤT BẠI";
+          statusDiv.style.color = "red";
+
+          if (e.message.includes("permission-denied")) {
+            log(
+              "💡 Gợi ý: Hãy kiểm tra Security Rules (chọn 'Start in test mode')",
+              "orange",
+            );
+          }
+        }
+      }
+
+      runTest();
+    </script>
+  </body>
+</html>

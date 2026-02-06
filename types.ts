@@ -67,6 +67,8 @@ export interface BankTransaction {
     action: 'CREATE_TRANSACTION' | 'CREATE_INVOICE' | 'IGNORE';
     category?: string;
     explanation?: string;
+    note?: string; // Diễn giải lại nội dung cho ngắn gọn
+    confidence?: number;
   };
 }
 
@@ -74,8 +76,18 @@ export interface TourDiscrepancy {
   item: string;
   planAmount: string;
   actualAmount: string;
+  actualAmountNum: number; // Để tính tổng tiền
   issue: string; // Lý do sai lệch (Vượt mức, Không có trong plan...)
-  severity: 'HIGH' | 'MEDIUM' | 'LOW';
+  status: 'OK' | 'WARNING' | 'ERROR';
+}
+
+export interface AuditReport {
+  items: TourDiscrepancy[];
+  summary: {
+    totalActual: number;
+    totalIllegal: number; // Tổng chi sai phạm
+    complianceRate: number; // % Tuân thủ
+  };
 }
 
 export interface Contract {

@@ -1,13 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Transaction, FinancialSummary } from '../types';
+import { Transaction, FinancialSummary, InvoiceData } from '../types';
 import { db, isFirebaseConfigured } from '../firebaseConfig';
 import { collection, onSnapshot, addDoc, deleteDoc, doc, query, orderBy, Timestamp } from 'firebase/firestore';
 
 interface AccountingContextType {
   transactions: Transaction[];
+  invoices: InvoiceData[];
   summary: FinancialSummary;
   addTransaction: (transaction: Transaction) => Promise<void>;
   deleteTransaction: (id: string) => Promise<void>;
+  addInvoice: (invoice: InvoiceData) => Promise<void>;
   isLoading: boolean;
   isOfflineMode: boolean;
 }
@@ -23,6 +25,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
 
 export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [invoices, setInvoices] = useState<InvoiceData[]>([]);
   const [summary, setSummary] = useState<FinancialSummary>({ totalIncome: 0, totalExpense: 0, netProfit: 0 });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -46,6 +49,7 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     if (!isFirebaseConfigured || !db) {
       // OFFLINE MODE
       setTransactions(MOCK_TRANSACTIONS);
+      setInvoices([]);
       calculateSummary(MOCK_TRANSACTIONS);
       setIsLoading(false);
       return;
@@ -53,9 +57,9 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
 
     // FIREBASE MODE
     try {
+      // 1. Transactions
       const q = query(collection(db, "transactions"), orderBy("date", "desc"));
-      
-      const unsubscribe = onSnapshot(q, (snapshot) => {
+      const unsubTrans = onSnapshot(q, (snapshot) => {
         const fetchedTransactions: Transaction[] = snapshot.docs.map(doc => ({
           id: doc.id,
           ...doc.data()
@@ -66,11 +70,22 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
         setIsLoading(false);
       }, (error) => {
         console.error("Error fetching transactions:", error);
-        // Fallback to local if permission denied or other errors
         setIsLoading(false);
       });
 
-      return () => unsubscribe();
+      // 2. Invoices
+      const qInv = query(collection(db, "invoices"), orderBy("date", "desc"));
+      const unsubInv = onSnapshot(qInv, (snapshot) => {
+        const fetchedInvoices: InvoiceData[] = snapshot.docs.map(doc => ({
+            ...doc.data()
+        } as InvoiceData));
+        setInvoices(fetchedInvoices);
+      }, (error) => console.error("Error fetching invoices:", error));
+
+      return () => {
+          unsubTrans();
+          unsubInv();
+      };
     } catch (error) {
       console.error("Firebase connection error:", error);
       setIsLoading(false);
@@ -79,7 +94,6 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const addTransaction = async (transaction: Transaction) => {
     if (!isFirebaseConfigured || !db) {
-      // Offline: Add to local state
       const newTx = { ...transaction, id: Date.now().toString() };
       const updated = [newTx, ...transactions];
       setTransactions(updated);
@@ -101,13 +115,11 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
 
   const deleteTransaction = async (id: string) => {
     if (!isFirebaseConfigured || !db) {
-      // Offline: Remove from local state
       const updated = transactions.filter(t => t.id !== id);
       setTransactions(updated);
       calculateSummary(updated);
       return;
     }
-
     try {
       await deleteDoc(doc(db, "transactions", id));
     } catch (error) {
@@ -115,12 +127,30 @@ export const AccountingProvider: React.FC<{ children: ReactNode }> = ({ children
     }
   };
 
+  const addInvoice = async (invoice: InvoiceData) => {
+     if (!isFirebaseConfigured || !db) {
+        setInvoices([invoice, ...invoices]);
+        return;
+     }
+     try {
+        await addDoc(collection(db, "invoices"), {
+            ...invoice,
+            createdAt: Timestamp.now()
+        });
+     } catch (e) {
+         console.error("Add Invoice Error:", e);
+         alert("Lỗi lưu hóa đơn!");
+     }
+  };
+
   return (
     <AccountingContext.Provider value={{ 
       transactions, 
+      invoices,
       summary, 
       addTransaction, 
-      deleteTransaction, 
+      deleteTransaction,
+      addInvoice,
       isLoading,
       isOfflineMode: !isFirebaseConfigured 
     }}>
@@ -136,3 +166,5 @@ export const useAccounting = () => {
   }
   return context;
 };
+
+

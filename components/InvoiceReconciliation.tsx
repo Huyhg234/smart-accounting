@@ -1,44 +1,86 @@
 import React, { useState } from 'react';
+import { useAccounting } from '../contexts/AccountingContext'; // Import Context
 import { BankTransaction, Contract, ReconciliationResult } from '../types';
 import { matchBankToInvoice } from '../services/geminiService';
 import { Calculator, FilePlus, RefreshCw, Wand2, CheckCircle, AlertTriangle, ArrowRight } from 'lucide-react';
 
-// Mock Data
-const MOCK_CONTRACTS: Contract[] = [
-  { id: 'c1', customerName: 'Công Ty TNHH Du Lịch Việt', contractValue: 50000000, invoicedAmount: 30000000, status: 'OPEN' },
-  { id: 'c2', customerName: 'Anh Nguyễn Văn An', contractValue: 12000000, invoicedAmount: 0, status: 'OPEN' },
-  { id: 'c3', customerName: 'Tập Đoàn ABC', contractValue: 100000000, invoicedAmount: 100000000, status: 'CLOSED' },
-];
-
-const MOCK_BANK_IN: BankTransaction[] = [
-  { id: 'b1', date: '2023-11-05', description: 'DL VIET TT DOT 2 HOP DONG 001', amount: 25000000, type: 'CREDIT', status: 'NEW' },
-  { id: 'b2', date: '2023-11-06', description: 'NGUYEN VAN AN CHUYEN KHOAN', amount: 12000000, type: 'CREDIT', status: 'NEW' },
-  { id: 'b3', date: '2023-11-07', description: 'CTY XYZ TAM UNG', amount: 5000000, type: 'CREDIT', status: 'NEW' },
-];
-
 const InvoiceReconciliation: React.FC = () => {
-  const [results, setResults] = useState<ReconciliationResult[]>([]);
-  const [isMatching, setIsMatching] = useState(false);
+    const { transactions, addInvoice } = useAccounting(); 
+    const [results, setResults] = useState<ReconciliationResult[]>([]);
+    const [isMatching, setIsMatching] = useState(false);
+    
+    // State quản lý danh sách Hợp đồng (Thay thế Mock cứng)
+    const [contracts, setContracts] = useState<Contract[]>([
+        { id: 'c1', customerName: 'Khách hàng Trần Văn B', contractValue: 5000000, invoicedAmount: 0, status: 'OPEN' },
+        { id: 'c2', customerName: 'Công Ty Du Lịch Việt', contractValue: 50000000, invoicedAmount: 30000000, status: 'OPEN' }
+    ]);
+    const [newContract, setNewContract] = useState({ name: '', value: 0 });
+
+    const addContract = () => {
+        if(!newContract.name || newContract.value <= 0) return;
+        setContracts([...contracts, {
+            id: `c_${Date.now()}`,
+            customerName: newContract.name,
+            contractValue: newContract.value,
+            invoicedAmount: 0,
+            status: 'OPEN'
+        }]);
+        setNewContract({ name: '', value: 0 });
+    };
+
+    // ... (rest of filtering logic)
+
+  // Lọc lấy các khoản THU nhập thực tế từ Bank Hub đã duyệt
+  const realIncomeData = transactions.filter(t => t.type === 'INCOME').map(t => ({
+      id: t.id,
+      date: t.date,
+      description: t.description,
+      amount: t.amount,
+      type: 'CREDIT',
+      status: 'MATCHED'
+  } as BankTransaction));
 
   const handleAIMatch = async () => {
+    if (realIncomeData.length === 0) {
+        alert("Chưa có dữ liệu thu nhập nào để đối soát. Vui lòng vào Bank Hub duyệt giao dịch trước!");
+        return;
+    }
     setIsMatching(true);
-    // Simulate delay for effect
-    await new Promise(r => setTimeout(r, 800));
-    const matches = await matchBankToInvoice(MOCK_BANK_IN, MOCK_CONTRACTS);
+    // Gọi AI so khớp Dữ liệu thật vs Hợp đồng mẫu
+    const matches = await matchBankToInvoice(realIncomeData, contracts);
     setResults(matches);
     setIsMatching(false);
   };
 
-  const handleAction = (res: ReconciliationResult) => {
-    alert(`Thực hiện hành động: ${res.suggestion} cho HĐ ${res.contractId}\nSố tiền: ${res.difference.toLocaleString('vi-VN')}`);
-  };
+  const handleAction = async (res: ReconciliationResult) => {
+    const confirmation = confirm(`Xác nhận tạo DRAFT hóa đơn cho HĐ ${res.contractId} với số tiền ${res.difference.toLocaleString('vi-VN')}?`);
+    if (!confirmation) return;
 
+    // Tạo hóa đơn mới
+    const newInvoice = {
+        fileName: `DRAFT_INV_${res.contractId}_${Date.now()}`,
+        invoiceNumber: `DRAFT-${Date.now().toString().slice(-4)}`,
+        date: new Date().toISOString().split('T')[0],
+        vendorName: "Công Ty Của Bạn",
+        buyerName: contracts.find(c => c.id === res.contractId)?.customerName || "Khách lẻ",
+        taxAmount: Math.round(res.difference * 0.08), // Giả sử thuế 8%
+        totalAmount: res.difference,
+        description: `Thu tiền theo HĐ ${res.contractId} - ${res.reason}`,
+        category: "Doanh thu dịch vụ",
+        status: 'pending' // pending = Draft
+    };
+
+    await addInvoice(newInvoice as any);
+    alert("✅ Đã tạo Hóa đơn nháp thành công! Vui lòng kiểm tra trong mục 'Quản lý Hóa đơn'.");
+  };
+    
   return (
     <div className="space-y-6 animate-fade-in">
+       {/* ... Header ... */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800">Đối Soát & Xuất Hóa Đơn Tự Động</h1>
-          <p className="text-slate-500">Sử dụng AI để khớp lệnh tiền về từ ngân hàng với hợp đồng/hóa đơn.</p>
+          <h1 className="text-2xl font-bold text-slate-800">Đối Soát Công Nợ Tự Động</h1>
+          <p className="text-slate-500">So khớp <b className="text-green-600">Tiền đã thu (Sổ cái)</b> với <b className="text-orange-600">Hợp đồng cần thu</b>.</p>
         </div>
         <button 
           onClick={handleAIMatch}
@@ -46,7 +88,7 @@ const InvoiceReconciliation: React.FC = () => {
           className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-2.5 rounded-xl shadow-lg shadow-purple-200 flex items-center gap-2 transition-all transform hover:scale-105 disabled:opacity-70 disabled:scale-100"
         >
           {isMatching ? <RefreshCw className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
-          AI Tự Động Khớp Lệnh
+          AI Quét & Khớp Lệnh
         </button>
       </div>
 
@@ -55,26 +97,52 @@ const InvoiceReconciliation: React.FC = () => {
         <div className="space-y-6">
           <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
             <h3 className="font-bold text-slate-700 mb-3 flex items-center gap-2">
-              <span className="bg-green-100 p-1 rounded text-green-700 text-xs">NGÂN HÀNG</span>
-              Giao dịch tiền về (Chưa xử lý)
+              <span className="bg-green-100 p-1 rounded text-green-700 text-xs">SỔ CÁI (REALTIME)</span>
+              Tiền đã thu về (Đã duyệt từ Bank)
             </h3>
-            <div className="space-y-2">
-              {MOCK_BANK_IN.map(t => (
-                <div key={t.id} className="p-3 bg-slate-50 rounded border border-slate-100 text-sm">
+            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+              {realIncomeData.length === 0 ? (
+                  <p className="text-sm text-slate-400 italic p-4 text-center">Chưa có giao dịch thu nào.</p>
+              ) : realIncomeData.map(t => (
+                <div key={t.id} className="p-3 bg-green-50 rounded border border-green-100 text-sm">
                   <div className="font-semibold text-slate-800">{t.description}</div>
-                  <div className="text-green-600 font-mono">+{t.amount.toLocaleString('vi-VN')}</div>
+                  <div className="text-green-600 font-mono font-bold">+{t.amount.toLocaleString('vi-VN')}</div>
+                  <div className="text-[10px] text-slate-400 mt-1">{t.date}</div>
                 </div>
               ))}
             </div>
           </div>
+          {/* ... Contract List ... */}
 
           <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-sm">
-            <h3 className="font-bold text-slate-700 mb-3 flex items-center gap-2">
-              <span className="bg-orange-100 p-1 rounded text-orange-700 text-xs">HỢP ĐỒNG</span>
-              Danh sách chờ thanh toán
-            </h3>
-            <div className="space-y-2">
-              {MOCK_CONTRACTS.map(c => (
+            <div className="flex justify-between items-center mb-3">
+                <h3 className="font-bold text-slate-700 flex items-center gap-2">
+                <span className="bg-orange-100 p-1 rounded text-orange-700 text-xs">HỢP ĐỒNG</span>
+                Danh sách chờ thanh toán
+                </h3>
+            </div>
+            
+            {/* Input Form */}
+            <div className="flex gap-2 mb-4">
+                <input 
+                    type="text" 
+                    placeholder="Tên Khách Hàng (VD: Trần Văn B)" 
+                    className="flex-1 text-xs border rounded px-2 py-1"
+                    value={newContract.name}
+                    onChange={e => setNewContract({...newContract, name: e.target.value})}
+                />
+                <input 
+                    type="number" 
+                    placeholder="Giá trị HĐ" 
+                    className="w-24 text-xs border rounded px-2 py-1"
+                    value={newContract.value || ''}
+                    onChange={e => setNewContract({...newContract, value: Number(e.target.value)})}
+                />
+                <button onClick={addContract} className="bg-orange-500 text-white text-xs px-3 rounded hover:bg-orange-600">Thêm</button>
+            </div>
+
+            <div className="space-y-2 max-h-[200px] overflow-y-auto">
+              {contracts.map(c => (
                 <div key={c.id} className="p-3 bg-slate-50 rounded border border-slate-100 text-sm flex justify-between">
                   <div>
                     <div className="font-semibold text-slate-800">{c.customerName}</div>
