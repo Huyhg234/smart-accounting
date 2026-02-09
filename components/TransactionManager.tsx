@@ -1,9 +1,7 @@
-```
 import React, { useState, useMemo } from 'react';
 import { useAccounting } from '../contexts/AccountingContext';
 import { Transaction, TransactionType } from '../types';
-import { generateFinancialReport } from '../services/geminiService';
-import { Plus, Trash2, Wand2, Search, ArrowUpCircle, ArrowDownCircle, Filter, X, Calendar, Loader2, FileSpreadsheet } from 'lucide-react';
+import { Plus, Trash2, Search, ArrowUpCircle, ArrowDownCircle, Filter, X, Calendar, Loader2, FileSpreadsheet } from 'lucide-react';
 
 const TransactionManager: React.FC = () => {
   const { transactions, addTransaction, deleteTransaction, isLoading } = useAccounting();
@@ -23,24 +21,12 @@ const TransactionManager: React.FC = () => {
   const [type, setType] = useState<TransactionType>('EXPENSE');
   const [category, setCategory] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [isPredicting, setIsPredicting] = useState(false);
 
   // Get unique categories for filter dropdown
   const uniqueCategories = useMemo(() => {
     const cats = new Set(transactions.map(t => t.category));
     return Array.from(cats).sort();
   }, [transactions]);
-
-  const handlePredict = async () => {
-    if (!desc) return;
-    setIsPredicting(true);
-    const prediction = await predictCategory(desc);
-    if (prediction) {
-      setCategory(prediction.category);
-      setType(prediction.type);
-    }
-    setIsPredicting(false);
-  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,7 +97,7 @@ const TransactionManager: React.FC = () => {
                       td, th { border: 0.5pt solid #000000; padding: 5px; vertical-align: middle; }
                       th { background-color: #f0f0f0; font-weight: bold; text-align: center; }
                       .num { mso-number-format:"#,##0"; text-align: right; }
-                      .text { mso-number-format:"\@"; }
+                      .text { mso-number-format:"\\@"; }
                     </style>
                   </head>
                   <body>
@@ -367,15 +353,6 @@ const TransactionManager: React.FC = () => {
                     placeholder="VD: Mua mực in..."
                     className="flex-1 p-2 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
                   />
-                  <button
-                    type="button"
-                    onClick={handlePredict}
-                    disabled={isPredicting || !desc}
-                    className="bg-purple-100 text-purple-700 p-2 rounded-lg hover:bg-purple-200 transition-colors disabled:opacity-50"
-                    title="Tự động điền bằng AI"
-                  >
-                    <Wand2 className={`w-5 h-5 ${isPredicting ? 'animate-spin' : ''}`} />
-                  </button>
                 </div>
               </div>
 
