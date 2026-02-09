@@ -37,6 +37,7 @@ const AIConsultant: React.FC = () => {
     setIsLoading(true);
 
     try {
+      // FORCE FRESH CALL
       const responseText = await getFinancialAdvice(transactions, userMsg.text);
       
       const aiMsg: ChatMessage = {
