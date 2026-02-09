@@ -1,7 +1,8 @@
+```
 import React, { useState, useMemo } from 'react';
 import { useAccounting } from '../contexts/AccountingContext';
 import { Transaction, TransactionType } from '../types';
-import { predictCategory } from '../services/geminiService';
+import { generateFinancialReport } from '../services/geminiService';
 import { Plus, Trash2, Wand2, Search, ArrowUpCircle, ArrowDownCircle, Filter, X, Calendar, Loader2, FileSpreadsheet } from 'lucide-react';
 
 const TransactionManager: React.FC = () => {

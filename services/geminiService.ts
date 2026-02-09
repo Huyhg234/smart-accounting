@@ -126,10 +126,50 @@ export const analyzeBankTransaction = async (description: string, amount: number
     }
 };
 
-// ... Placeholder cũ (Giữ nguyên để App không crash)
-export const preventImportError = 1; 
-export const predictCategory = async () => null;
-export const getFinancialAdvice = async () => "Tính năng đang cập nhật...";
+/**
+ * CONSULTANT FEATURE: Answers user questions about financial data
+ */
+export const getFinancialAdvice = async (transactions: Transaction[], question: string): Promise<string> => {
+    try {
+        // Tóm tắt dữ liệu (Giới hạn 50 giao dịch gần nhất để tiết kiệm token)
+        const summary = transactions.slice(0, 50).map(t => 
+            `- ${t.date}: ${t.description} (${t.amount.toLocaleString()} VND) [${t.type}]`
+        ).join('\n');
+
+        const totalIncome = transactions.filter(t => t.type ==='INCOME').reduce((s,t)=>s+t.amount,0);
+        const totalExpense = transactions.filter(t => t.type ==='EXPENSE').reduce((s,t)=>s+t.amount,0);
+
+        const prompt = `
+            Bạn là một Chuyên gia Kế toán và Tư vấn Tài chính (CFO Assistant).
+            
+            DỮ LIỆU TÀI CHÍNH HIỆN TẠI CỦA CÔNG TY:
+            - Tổng thu: ${totalIncome.toLocaleString()} VND
+            - Tổng chi: ${totalExpense.toLocaleString()} VND
+            - Lợi nhuận ròng: ${(totalIncome - totalExpense).toLocaleString()} VND
+            
+            CHI TIẾT 50 GIAO DỊCH GẦN NHẤT:
+            ${summary}
+
+            CÂU HỎI CỦA NGƯỜI DÙNG:
+            "${question}"
+
+            NHIỆM VỤ:
+            Hãy trả lời câu hỏi của người dùng một cách chính xác, ngắn gọn và hữu ích dựa trên dữ liệu trên.
+            - Nếu người dùng hỏi về tổng quan, hãy dùng số liệu tổng.
+            - Nếu hỏi chi tiết, hãy tra cứu trong danh sách giao dịch.
+            - Nếu câu hỏi không liên quan đến tài chính, hãy từ chối lịch sự.
+            
+            Trả lời bằng Tiếng Việt, định dạng Markdown (có thể dùng bảng hoặc danh sách nếu cần thiết).
+        `;
+
+        const response = await callGeminiDirect(prompt);
+        return response;
+
+    } catch (error: any) {
+        console.error("Financial Advice Error:", error);
+        return "Xin lỗi, tôi đang gặp sự cố khi kết nối với máy chủ AI. Vui lòng thử lại sau.";
+    }
+};
 /**
  * Generates financial overview report (CORE FEATURE FOR DASHBOARD)
  */
