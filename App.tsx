@@ -10,9 +10,12 @@ import TourExpenseChecker from './components/TourExpenseChecker';
 import InvoiceReconciliation from './components/InvoiceReconciliation';
 import { AccountingProvider } from './contexts/AccountingContext';
 
+import TetTheme from './components/TetTheme';
+
 const App: React.FC = () => {
   return (
     <AccountingProvider>
+      <TetTheme />
       <Router>
         <div className="flex h-screen bg-slate-50 font-sans text-slate-900">
           <Sidebar />
