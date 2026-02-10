@@ -13,7 +13,7 @@ const Sidebar: React.FC = () => {
     }`;
 
   return (
-    <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col h-full fixed left-0 top-0 overflow-y-auto z-10">
+    <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col h-full fixed left-0 top-0 overflow-y-auto z-[60]">
       <div className="p-6 border-b border-slate-100">
         <div className="flex items-center gap-2 font-bold text-2xl text-blue-700">
           <WalletCards className="w-8 h-8" />
