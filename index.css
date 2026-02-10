@@ -1,0 +1,123 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Custom Tet 2026 Theme - CSS Pure Version */
+:root {
+  --tet-red: #ff0033;
+  --tet-gold: #ffd700;
+  --cyber-blue: #00f0ff;
+  --neon-pink: #ff00ff;
+}
+
+body {
+  /* Fallback colorful gradient since image generation failed */
+  background: 
+    linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+    repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255, 0, 51, 0.1) 10px, rgba(255, 0, 51, 0.1) 20px),
+    linear-gradient(135deg, #1a0b0b 0%, #4a0000 50%, #1a0b2e 100%);
+  
+  background-attachment: fixed;
+  background-size: cover;
+  color: #333;
+  font-family: 'Inter', sans-serif;
+  overflow-x: hidden;
+}
+
+/* Peach Blossom Falling Effect (CSS Particles) */
+body::before, body::after {
+    content: "🌸";
+    position: fixed;
+    top: -10%;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    pointer-events: none;
+    z-index: 0;
+    font-size: 20px;
+    opacity: 0.6;
+    animation: fall 15s linear infinite;
+    text-shadow: 0 0 5px #ff00ff;
+}
+
+body::after {
+    content: "✨";
+    animation-delay: -7s;
+    font-size: 15px;
+    opacity: 0.4;
+    text-shadow: 0 0 5px #ffd700;
+}
+
+@keyframes fall {
+    0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
+    10% { opacity: 0.8; }
+    100% { transform: translateY(110vh) translateX(20vw) rotate(360deg); opacity: 0; }
+}
+
+/* Semi-transparent glass effect for containers */
+.bg-white {
+  background-color: rgba(255, 255, 255, 0.94) !important;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 215, 0, 0.2);
+}
+
+.bg-slate-50 {
+    background-color: rgba(240, 245, 255, 0.85) !important;
+}
+
+/* Sidebar Styling Upgrade - Cyberpunk Tet */
+aside {
+    background: linear-gradient(160deg, #2d0a0a 0%, #1a1a2e 100%) !important;
+    border-right: 2px solid var(--tet-gold);
+    box-shadow: 5px 0 25px rgba(255, 0, 51, 0.2);
+    position: relative;
+    overflow: hidden;
+}
+
+/* Neon glow effect for Sidebar active items */
+aside .bg-blue-50 {
+    background: linear-gradient(90deg, rgba(255, 0, 51, 0.1), transparent) !important;
+    border-left: 4px solid var(--tet-gold);
+    color: var(--tet-gold) !important;
+}
+
+aside h1 {
+    background: linear-gradient(to right, #ffd700, #ff0033);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    filter: drop-shadow(0 0 5px rgba(255, 0, 51, 0.5));
+}
+
+/* Festive Buttons */
+button.bg-blue-600 {
+    background: linear-gradient(45deg, #d6002a, #ff4d4d) !important;
+    border: 1px solid #ffd700;
+    box-shadow: 0 0 15px rgba(255, 0, 51, 0.4);
+    text-transform: uppercase;
+    font-weight: bold;
+    letter-spacing: 0.5px;
+}
+
+button.bg-blue-600:hover {
+    background: linear-gradient(45deg, #ff1a40, #ff8080) !important;
+    box-shadow: 0 0 25px rgba(255, 0, 51, 0.7);
+    transform: translateY(-2px);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2); 
+}
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #ff0033, #ffd700); 
+  border-radius: 5px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
