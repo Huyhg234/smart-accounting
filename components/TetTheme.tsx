@@ -40,8 +40,11 @@ const TetTheme: React.FC = () => {
       <style>{`
         @keyframes fall {
           0% { transform: translateY(-10vh) translateX(0) rotate(0deg); opacity: 0; }
-          10% { opacity: 0.6; }
+          10% { opacity: 1; }
           100% { transform: translateY(100vh) translateX(20px) rotate(360deg); opacity: 0; }
+        }
+        .animate-fall {
+          animation: fall linear infinite;
         }
       `}</style>
     </div>
